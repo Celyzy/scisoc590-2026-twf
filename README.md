@@ -1,6 +1,6 @@
 # Talent & Workforce · Stakeholder Redteaming Dashboard
 
-A self-contained, single-file policy dashboard built for a **Talent & Workforce Subcommittee**. It helps staff anticipate which stakeholder groups have concerns about each of six policy recommendations, ranked by grievance intensity, with tailored engagement strategies.
+A self-contained, single-file policy dashboard built for the **SCISOC 590 Talent & Workforce Team**. It helps staff anticipate which stakeholder groups have concerns about each of six policy recommendations, ranked by grievance intensity, with tailored engagement strategies.
 
 ## What it does
 
