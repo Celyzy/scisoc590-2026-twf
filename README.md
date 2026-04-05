@@ -1,6 +1,6 @@
-# NC AI Council · Stakeholder Redteaming Dashboard
+# Talent & Workforce · Stakeholder Redteaming Dashboard
 
-A self-contained, single-file policy dashboard built for the **NC AI Council Talent & Workforce Subcommittee**. It helps council staff anticipate which stakeholder groups have concerns about each of six policy recommendations, ranked by grievance intensity, with tailored engagement strategies.
+A self-contained, single-file policy dashboard built for a **Talent & Workforce Subcommittee**. It helps staff anticipate which stakeholder groups have concerns about each of six policy recommendations, ranked by grievance intensity, with tailored engagement strategies.
 
 ## What it does
 
