@@ -513,7 +513,11 @@ function renderOverview() {
   Object.entries(stakeholders).forEach(([recId, list]) => {
     list.forEach(s => all.push({ ...s, recId }));
   });
-  all.sort((a, b) => b.intensity - a.intensity);
+  const stanceOrder = { against: 0, neutral: 1, pro: 2 };
+  all.sort((a, b) => {
+    if (stanceOrder[a.stance] !== stanceOrder[b.stance]) return stanceOrder[a.stance] - stanceOrder[b.stance];
+    return b.intensity - a.intensity;
+  });
 
   el.innerHTML = '<div class="ov-grid">' + all.map(s => {
     const nn = getNonneg(s);
