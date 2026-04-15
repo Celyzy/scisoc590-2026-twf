@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talent &amp; Workforce · Stakeholder Redteaming Dashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f4f5f7;
+  color: #1a1a2e;
+  min-height: 100vh;
+}
+
+/* ── HEADER ─────────────────────────────────────────── */
+#header {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff; border-bottom: 1px solid #e5e7eb;
+  padding: 11px 28px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.eyebrow {
+  font-size: 10.5px; color: #185FA5; letter-spacing: 0.1em;
+  text-transform: uppercase; font-weight: 600; margin-bottom: 2px;
+}
+.hdr-title { font-size: 17px; font-weight: 700; color: #111827; line-height: 1.25; }
+.hdr-sub   { font-size: 11.5px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+.produced  { text-align: right; flex-shrink: 0; }
+.prod-lbl  { font-size: 10.5px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+.prod-names { font-size: 12px; color: #374151; font-weight: 500; }
+
+/* ── TABS ────────────────────────────────────────────── */
+#tabs-bar {
+  background: #fff; border-bottom: 1px solid #e5e7eb;
+  padding: 10px 28px; display: flex; gap: 6px; flex-wrap: wrap;
+}
+.tab-pill {
+  padding: 5px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 500;
+  cursor: pointer; border: 1px solid #e5e7eb; background: #fff; color: #374151;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  white-space: nowrap; line-height: 1.55;
+}
+.tab-pill:hover:not(.active) { background: #f3f4f6; border-color: #d1d5db; }
+.tab-pill.active { background: #185FA5; border-color: #185FA5; color: #fff; }
+
+/* ── FILTER ──────────────────────────────────────────── */
+#filter-bar {
+  padding: 9px 28px; display: flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid #ebebeb; background: #fafafa;
+}
+.filter-label { font-size: 12px; color: #9ca3af; margin-right: 2px; }
+.filter-btn {
+  padding: 3px 11px; border-radius: 14px; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid #e5e7eb; background: #fff; color: #374151;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.filter-btn:hover:not(.active) { background: #f3f4f6; }
+.filter-btn[data-stance="all"].active     { background: #185FA5; border-color: #185FA5; color: #fff; }
+.filter-btn[data-stance="against"].active { background: #E24B4A; border-color: #E24B4A; color: #fff; }
+.filter-btn[data-stance="neutral"].active { background: #BA7517; border-color: #BA7517; color: #fff; }
+.filter-btn[data-stance="pro"].active     { background: #639922; border-color: #639922; color: #fff; }
+
+/* ── CONTEXT BLURB ───────────────────────────────────── */
+#context-blurb {
+  margin: 14px 28px 12px;
+  padding: 9px 14px;
+  border-left: 3px solid #185FA5;
+  background: #f0f7ff;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px; color: #374151; line-height: 1.55;
+}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────── */
+#main {
+  display: flex; gap: 0;
+  padding: 0 28px 52px;
+  align-items: flex-start;
+}
+
+/* ── CARD LIST ───────────────────────────────────────── */
+#card-list {
+  width: 340px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.scard {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 13px 15px; cursor: pointer;
+  transition: border-color 0.13s;
+}
+.scard:hover         { border-color: #93b8e3; }
+.scard.selected      { border-color: #185FA5; box-shadow: 0 0 0 2.5px rgba(24,95,165,0.13); }
+
+.card-r1 { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.sdot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sdot-against { background: #E24B4A; }
+.sdot-neutral { background: #BA7517; }
+.sdot-pro     { background: #639922; }
+
+.sname { font-size: 13.5px; font-weight: 600; color: #111827; flex: 1; min-width: 0; }
+
+.sbadge {
+  flex-shrink: 0; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 10px; text-transform: capitalize; letter-spacing: 0.01em;
+}
+.sbadge-against { background: #FCEBEB; color: #A32D2D; }
+.sbadge-neutral { background: #FAEEDA; color: #854F0B; }
+.sbadge-pro     { background: #EAF3DE; color: #3B6D11; }
+
+.card-r2 { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.int-lbl { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+
+.bar-wrap {
+  width: 160px; flex-shrink: 0;
+  height: 5px; background: #eef0f2; border-radius: 3px; overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-against { background: #E24B4A; }
+.bar-neutral { background: #BA7517; }
+.bar-pro     { background: #639922; }
+
+.int-score { font-size: 12px; font-weight: 600; color: #374151; white-space: nowrap; }
+.card-r3   { font-size: 12px; color: #6b7280; line-height: 1.45; }
+
+/* ── DETAIL PANEL ────────────────────────────────────── */
+#detail-panel {
+  flex-shrink: 0; width: 0; overflow: hidden;
+  transition: width 0.22s cubic-bezier(.4,0,.2,1),
+              margin-left 0.22s cubic-bezier(.4,0,.2,1);
+  margin-left: 0;
+}
+#detail-panel.open { width: 320px; margin-left: 16px; }
+
+#detail-inner {
+  width: 320px; background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 10px; padding: 16px 18px 22px;
+}
+
+.dp-hdr { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px; }
+.dp-title-blk { flex: 1; }
+.dp-name { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 5px; }
+.dp-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dp-score { font-size: 12px; color: #6b7280; font-weight: 500; }
+.dp-close {
+  flex-shrink: 0; background: none; border: none; cursor: pointer;
+  color: #9ca3af; font-size: 21px; line-height: 1; padding: 0; margin-top: -3px;
+}
+.dp-close:hover { color: #374151; }
+
+.dp-sec { margin-bottom: 13px; }
+.dp-sec:last-child { margin-bottom: 0; }
+.dp-sec-lbl {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.09em; color: #9ca3af;
+  padding-bottom: 5px; border-bottom: 1px solid #f0f0f0; margin-bottom: 8px;
+}
+.dp-sec-body { font-size: 12.5px; color: #374151; line-height: 1.65; }
+
+/* ── OVERVIEW SECTION ────────────────────────────────── */
+#overview-section { flex: 1; min-width: 0; display: none; }
+
+.ov-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
+  gap: 12px;
+}
+.ov-card {
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 10px; padding: 13px 15px;
+}
+.ov-hdr { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
+.ov-name { font-size: 13px; font-weight: 600; color: #111827; flex: 1; }
+.ov-int-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.ov-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 9px; }
+.rec-chip {
+  font-size: 10.5px; padding: 2px 7px; border-radius: 8px;
+  background: #f0f6ff; color: #185FA5; font-weight: 500; border: 1px solid #d1e3f8;
+}
+.nn-lbl {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 5px;
+}
+.nn-list { list-style: none; }
+.nn-list li {
+  font-size: 12px; color: #374151; padding-left: 13px;
+  position: relative; line-height: 1.5; margin-bottom: 2px;
+}
+.nn-list li::before { content: '—'; position: absolute; left: 0; color: #c4c9d0; }
+
+.empty-msg { padding: 36px 0; text-align: center; color: #9ca3af; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="header">
+  <div id="header-left">
+    <div class="eyebrow">SCISOC 590 Talent &amp; Workforce Team</div>
+    <div class="hdr-title">Stakeholder Redteaming Dashboard</div>
+    <div class="hdr-sub">Anticipating concerns, grievances, and engagement strategies across policy recommendations</div>
+  </div>
+  <div class="produced">
+    <div class="prod-lbl">Produced by</div>
+    <div class="prod-names">Celine Yang &middot; Jon Crucitti &middot; Angie Feng &middot; Victoria Lanier</div>
+    <div class="prod-names" style="margin-top:2px;">Visualization by Celine Yang</div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div id="tabs-bar"></div>
+
+<!-- FILTER -->
+<div id="filter-bar">
+  <span class="filter-label">Stance</span>
+  <button class="filter-btn" data-stance="all">All</button>
+  <button class="filter-btn" data-stance="against">Against</button>
+  <button class="filter-btn" data-stance="neutral">Neutral</button>
+  <button class="filter-btn" data-stance="pro">Pro</button>
+</div>
+
+<!-- CONTEXT BLURB -->
+<div id="context-blurb"></div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="card-list"></div>
+  <div id="detail-panel"><div id="detail-inner"></div></div>
+  <div id="overview-section"></div>
+</div>
+
+<script>
+/* ── DATA ──────────────────────────────────────────────── */
+const recs = [
+  { id:'r1', label:'Community upskilling',  context:'Reskilling adults and displaced workers \u2014 particularly in manufacturing and legacy industries \u2014 through accessible, community-based training programs.' },
+  { id:'r2', label:'PK\u201313 education',   context:'Integrating AI literacy and responsible AI use into public school curricula, from foundational digital skills to STEM and CTE pathways.' },
+  { id:'r3', label:'Credentialling',         context:'Creating state-recognized, stackable micro-credentials for AI-adjacent skills that connect directly to employer demand.' },
+  { id:'r4', label:'Pipeline to workforce',  context:'Building structured, equitable pathways from education institutions \u2014 including HBCUs and community colleges \u2014 into AI-sector employment.' },
+  { id:'r5', label:'UE & reemployment',      context:'Reforming unemployment insurance and reemployment services to support workers displaced by AI-driven automation.' },
+];
+
+const stakeholders = {
+  r1:[
+    { name:'Manufacturing & legacy industry workers', stance:'against', intensity:90,
+      oneliner:'453K NC manufacturing workers face acute automation exposure with limited access to retraining.',
+      cares:'Workforce stability, operational predictability, and accessible retraining pathways that do not require income disruption.',
+      grievance:'NC\'s 453K manufacturing workers and $111B agriculture sector face disproportionate automation exposure. Employers in these sectors cite capital constraints that limit their ability to fund retraining, while existing upskilling programs are rarely designed around shift-work schedules or the specific skill gaps between legacy roles and AI-adjacent ones.',
+      engage:'Develop sector-based workforce compacts linking state training support to employer hiring commitments. Co-design short-term stackable credentials with legacy employers. Prioritize community colleges in high-displacement regions (Piedmont Triad, rural east) as retraining hubs. Align NCWorks Career Center programming with automation-exposed occupations.' },
+    { name:'Prime working-age adults (25\u201354)', stance:'against', intensity:82,
+      oneliner:'61% of NC tech jobs face significant disruption; workers need retraining that does not require sacrificing income.',
+      cares:'Job security, retraining access without income disruption, employer transparency on AI adoption, portable credentials, wage stability.',
+      grievance:'A January 2026 NC Dept. of Commerce report found that while current AI adoption in manufacturing (<10%) and information (30%) remains low, rapid projected growth means displacement risk is imminent. Workers cannot pause income to retrain and fear short-term credentials will not lead to quality, stable employment.',
+      engage:'Deploy sector-based reskilling grants through workforce boards. Incentivize employer co-investment in AI upskilling. Deliver flexible hybrid training. Use county workforce development boards to host AI impact briefings. Create rapid-response retraining funds for high-displacement-risk counties.' },
+    { name:'Community organizations', stance:'neutral', intensity:72,
+      oneliner:'Broadband gaps, transportation limits, and lack of wraparound services undermine program participation.',
+      cares:'Equitable access, structural barrier removal, co-design of programs, and accountability for inclusive outcomes.',
+      grievance:'Community-based organizations consistently flag that training availability alone does not guarantee participation. Unreliable broadband, limited transportation, and lack of wraparound services (childcare, career coaching) undermine completion rates \u2014 especially in rural counties and among low-income workers in manufacturing and services.',
+      engage:'Co-design programs with community stakeholders rather than imposing top-down structures. Fund locally delivered digital skills training. Build regional coalitions connecting nonprofits, employers, and educational institutions. Fund wraparound services as part of training program budgets.' },
+    { name:'Small businesses', stance:'neutral', intensity:60,
+      oneliner:'99% of NC\'s private businesses face high-risk AI adoption decisions with thin margins and no safety net.',
+      cares:'Capital constraints, certainty of returns, competitive pressure from larger firms, limited capacity to absorb retraining costs.',
+      grievance:'Small businesses \u2014 99% of NC\'s private firms \u2014 face tighter capital constraints and thinner margins than large employers, making AI-driven upskilling a high-risk decision. They are unlikely to invest unless returns are certain or competitive pressure forces action, yet are least equipped to navigate state program requirements.',
+      engage:'Offer cost-sharing mechanisms and subsidized AI adoption programs. Develop accessible toolkits through NC SBTDC and community colleges. Engage through small business associations with targeted, low-barrier AI resources. Create tiered participation requirements scaled to firm size.' },
+    { name:'NCWorks / NC Dept. of Commerce', stance:'neutral', intensity:45,
+      oneliner:'WIOA funding formulas reward rapid job placement over the deeper reskilling AI-adjacent roles require.',
+      cares:'Labor market outcomes, WIOA compliance, reducing structural unemployment, equity across rural and minority communities.',
+      grievance:'Commerce faces a structural tension: WIOA funding formulas reward rapid job placement, which incentivizes short-term credential programs over the deeper skilling AI-adjacent roles require. Cross-agency coordination across DPI, NCCCS, UNC System, and Commerce remains fragmented despite active commitments.',
+      engage:'Task the NCWorks Commission with developing an AI Workforce Transition Framework using real-time labor market data. Expand NC Workforce Credentials with a dedicated AI/automation track. Formalize data-sharing MOUs between Commerce, NCCCS, and the UNC System. Update WIOA-eligible training lists annually rather than on multi-year cycles.' },
+  ],
+  r2:[
+    { name:'NC Association of Educators (NCAE)', stance:'against', intensity:85,
+      oneliner:'25,000 teachers ranked 43rd in pay fear AI mandates add burden without support or compensation.',
+      cares:'Academic freedom, professional autonomy, manageable workload, and institutional support for pedagogical redesign.',
+      grievance:'NCAE represents 25,000 teachers in a state ranking 43rd nationally in average teacher pay. When the UNC-Chapel Hill Provost\'s 2024 AI Committee suggested an AI assignment on every syllabus, faculty pushed back on academic freedom grounds. Educators fear top-down AI mandates will intensify workload without adequate training, compensation, or support.',
+      engage:'Facilitate faculty-led AI task forces rather than mandates. Fund professional development grants at the department level. Allow department-level policy flexibility. Reframe AI as reducing administrative burden rather than transforming instruction. Engage NCAE early in any curriculum co-design process.' },
+    { name:'Parents & families of K\u201312 students', stance:'neutral', intensity:75,
+      oneliner:'Families worry about data privacy, broadband gaps in rural districts, and AI displacing foundational learning.',
+      cares:'Child safety online, academic fundamentals, data privacy, transparent AI use policies, and equal access across rural and urban districts.',
+      grievance:'Families \u2014 particularly in rural counties with inconsistent broadband \u2014 are concerned about whether AI tools are being vetted appropriately, what student data is collected, and whether AI integration is crowding out foundational instruction. Rural districts worry about resource gaps relative to urban systems.',
+      engage:'Publish plain-language parent guides before any rollout. Default to opt-in rather than opt-out data policies for minors. Ensure rural counties receive device and broadband prioritization. Hold virtual and county-based parent town halls. Leverage youth advisory councils to surface student perspectives.' },
+    { name:'Rural school districts', stance:'neutral', intensity:65,
+      oneliner:'Broadband and resource gaps across NC\'s 100 counties create unequal AI readiness.',
+      cares:'Geographic equity, device access, broadband infrastructure, teacher capacity, and digital literacy funding.',
+      grievance:'NCDIT\'s 2022 broadband report identified counties with inconsistent high-speed access that cannot support online training or AI-enabled instruction. Rural districts face compounding gaps \u2014 fewer devices, less experienced staff, and limited access to the professional development urban systems can easily access.',
+      engage:'Link broadband investment to AI education rollout \u2014 treat them as one policy domain, not two. Mandate geographic distribution requirements in program funding. Deploy AI literacy pilots through LEAs and regional education service alliances. Ensure rural counties are not last in device or infrastructure upgrades.' },
+    { name:'EdTech vendors', stance:'pro', intensity:35,
+      oneliner:'Vendors see a large public procurement opportunity but want faster and clearer procurement standards.',
+      cares:'Market access, procurement speed, regulatory clarity on product standards, and a vendor certification framework.',
+      grievance:'Slow and opaque procurement cycles and unclear technical standards create costly market uncertainty for vendors eager to enter the NC K\u201312 market. Absence of a certification framework makes it difficult for districts to assess products and for vendors to demonstrate compliance.',
+      engage:'Establish a vendor certification framework with clear, transparent criteria. Streamline procurement for pre-approved products. Use NC A&T\'s NVIDIA collaboration and the UNC System\'s Foundational AI Skills Course as models for scalable curriculum partnerships.' },
+  ],
+  r3:[
+    { name:'4-year universities & UNC system', stance:'against', intensity:78,
+      oneliner:'State-backed credentials may compete with degree programs without equivalent rigor or accreditation standards.',
+      cares:'Institutional prestige, tuition revenue, accreditation standing, and maintaining the long-term value of 4-year degrees.',
+      grievance:'UNC system administrators and private college leaders worry that state-backed micro-credentials compete directly with degree programs without equivalent rigor or oversight. This threatens both enrollment revenue and the value of degrees for students already in the pipeline.',
+      engage:'Involve universities in credential design committees from the start. Create articulation agreements so credentials stack toward existing degree pathways. Leverage HB 1004\'s $16M AI Hub allocation as a model for collaborative rather than competitive AI investment. Co-produce annual AI talent gap reports with institutional research offices.' },
+    { name:'Displaced workers in manufacturing & services', stance:'neutral', intensity:70,
+      oneliner:'Skeptical that credentials will translate to real employer recognition \u2014 the cost and time are too high to risk.',
+      cares:'Actual employment outcomes, affordability of training, employer recognition of certifications, and visible pathways to stable wages.',
+      grievance:'Workers with no financial cushion cannot afford to invest time and money in credentials that prior programs failed to get employers to recognize widely enough. Community college students and career-changers need assurance that credentials map to real, available jobs \u2014 not just theoretical demand.',
+      engage:'Require signed employer commitment letters before certifying any new credential. Publish outcome data \u2014 wages, placement rates \u2014 transparently through NC Careers. Expand NC Workforce Credentials with a dedicated AI/automation track via the NC Short-Term Workforce Development Grant Program. Partner with NCWorks on direct employer placement pipelines.' },
+    { name:'NC Community College System (NCCCS)', stance:'pro', intensity:52,
+      oneliner:'Community colleges are frontline credential providers but need sustained, multi-year funding to plan effectively.',
+      cares:'Institutional funding stability, enrollment growth, mission alignment, and sustainable revenue beyond one-time grants.',
+      grievance:'One-time grant structures create program dependency without sustainable revenue streams. Community college leaders prioritize credentials that connect directly to employment outcomes \u2014 especially for displaced workers \u2014 but cannot plan long-term under uncertain funding cycles.',
+      engage:'Build multi-year appropriations into credential program design. Involve NCCCS as a co-designer alongside Commerce and the UNC System. Formalize data-sharing MOUs to create accountability infrastructure. Co-locate NCWorks advisors on community college campuses in high-displacement counties.' },
+    { name:'Large employers & tech sector', stance:'pro', intensity:40,
+      oneliner:'Employers like Google, IBM, and SAS want AI-ready hires but say credential frameworks lag industry by 2\u20133 years.',
+      cares:'Talent pipeline quality, skills alignment with actual job requirements, hiring speed, and formal input into credential standards.',
+      grievance:'NC\'s largest employers \u2014 including Google, IBM, Atrium Health, and SAS \u2014 need AI-ready workers, but credential frameworks are updated too slowly to reflect real market demand. Employers want formal input into what credentials require, not just consultation after the fact.',
+      engage:'Create employer advisory boards with real authority to update credential requirements annually. Leverage existing public-private partnerships (IBM/Red Hat, SAS) as models for scalable employer-led training. Engage through NC TECH and the Chamber on regulatory clarity. Use NC A&T\'s AI program as a direct pipeline model.' },
+  ],
+  r4:[
+    { name:'Legacy industry employers', stance:'neutral', intensity:65,
+      oneliner:'Manufacturing and agriculture employers need pipeline graduates but face acute skill gaps and capital constraints.',
+      cares:'Workforce stability, operational predictability, retraining for long-tenured workers, and alignment of pipeline graduates to actual skill gaps.',
+      grievance:'NC\'s 453K manufacturing workers and $111B agriculture sector face acute automation exposure and a widening skill gap between existing workers and AI-adjacent roles. Capital constraints limit employer investment in pipeline partnerships, and existing pipelines are rarely designed around the specific needs of legacy industry roles.',
+      engage:'Develop sector-based workforce compacts linking training support to hiring commitments. Prioritize community colleges in high-displacement regions as retraining hubs. Co-design short-term stackable credentials with legacy employers to match actual skill gaps. Align NCWorks programming with automation-exposed occupations.' },
+    { name:'HBCUs', stance:'pro', intensity:62,
+      oneliner:'NC A&T launched a B.S. in AI but HBCU pipeline programs are systematically underfunded versus flagship universities.',
+      cares:'Equitable funding allocation, institutional capacity, student outcomes, and recognition as full pipeline partners.',
+      grievance:'NC A&T\'s 2024 Hanover Research report found NC\'s AI labor market will grow 3x faster than the overall market, generating 20,000+ new jobs. Yet pipeline programs historically default to flagship research universities, leaving HBCUs underfunded despite strong graduate outcomes. NC A&T\'s NVIDIA collaboration shows the potential \u2014 but it is the exception, not the norm.',
+      engage:'Set aside dedicated funding allocations for HBCUs within pipeline programs. Create a dedicated HBCU liaison role in program administration. Use NC A&T\'s NVIDIA collaboration and new B.S. in AI as scalable models. Expand HB 1004\'s $16M AI Hub funding to include HBCU campuses explicitly.' },
+    { name:'Youth (16\u201324) seeking career pathways', stance:'pro', intensity:55,
+      oneliner:'~125K annual NC graduates want career clarity, apprenticeships, and certainty about automation-resilient careers.',
+      cares:'Career clarity in AI-influenced sectors, paid internships and apprenticeships, local job retention for rural youth, and affordable transparent credential pathways.',
+      grievance:'Youth are more digitally comfortable than older cohorts but face significant uncertainty: which jobs will remain stable, whether degrees retain value, and how to access paid work-based learning. Rural youth face an additional concern \u2014 local job retention \u2014 as AI-sector employment concentrates in the Research Triangle.',
+      engage:'Conduct county-level workforce listening sessions through community colleges. Expand work-based learning in AI-augmented industries. Create an AI Career Navigator portal tailored by county. Embed AI skills into CTE pathways. Prioritize rural-to-urban employer pipeline programs to reduce brain drain from rural counties.' },
+    { name:'AI startups & venture-backed firms', stance:'neutral', intensity:45,
+      oneliner:'Research Triangle startups create high-skill AI jobs but have little structural incentive to support broad workforce transition.',
+      cares:'Access to high-skill AI talent, regulatory clarity enabling rapid iteration, and growth over broad workforce stability.',
+      grievance:'NC\'s Research Triangle AI startup ecosystem is a major job creator for high-skill roles, but startups are designed to accommodate employment volatility and heavy emphasis on scaling \u2014 giving them limited structural incentive to support broad-based workforce transition programs.',
+      engage:'Engage through First Flight Venture Center and Triangle accelerators. Encourage voluntary participation in apprenticeship and co-op pipelines with universities. Frame AI governance clarity as a competitive asset to attract venture investment. Connect startups to UNC System and NC A&T talent pipelines.' },
+  ],
+  r5:[
+    { name:'Prime working-age adults (25\u201354)', stance:'against', intensity:95,
+      oneliner:'WIOA benefit windows expire before meaningful retraining can be completed \u2014 workers fall off a financial cliff.',
+      cares:'Immediate financial relief, income continuity during retraining, realistic reemployment pathways, and employer-recognized portable credentials.',
+      grievance:'Current UI benefit windows expire before any meaningful retraining program can be completed, creating a cliff-edge for workers in transition. A January 2026 NC Dept. of Commerce report confirms displacement risk is accelerating \u2014 61% of NC tech jobs face significant long-term disruption \u2014 yet the retraining infrastructure has no bridge between job loss and credential attainment.',
+      engage:'Extend WIOA benefit eligibility for workers enrolled in approved retraining programs. Develop a bridge payment program to cover the income gap during training. Deploy rapid-response retraining funds for high-displacement-risk counties. Incentivize employer co-investment in AI upskilling for incumbent workers.' },
+    { name:'Labor organizations (AFL-CIO, NCAE, Teamsters)', stance:'against', intensity:85,
+      oneliner:'Labor wants advance notice, enforceable transparency, and retraining guarantees \u2014 not just after-the-fact consultation.',
+      cares:'AI transparency and worker notice, retraining and transition guarantees, collective bargaining over AI deployment, guardrails on job displacement, and human oversight requirements.',
+      grievance:'NC\'s AFL-CIO 2025 "AI in the Workplace" report emphasizes a human-first approach across eight key areas. With only 2.5% union density \u2014 lowest in the nation \u2014 NC labor organizations have limited structural leverage, making proactive government policy on worker notice and retraining guarantees essential. Rural labor stakeholders are particularly concerned that automation will hit distressed counties without parallel transition infrastructure.',
+      engage:'Institutionalize labor engagement through a formal Labor Advisory subcommittee. Host regional listening sessions in partnership with Central Labor Councils, especially in rural and manufacturing-heavy counties. Develop voluntary employer best-practice standards crafted jointly with labor. Ensure retraining programs include labor representation in design and governance.' },
+    { name:'Seniors (55+) and late-career workers', stance:'neutral', intensity:65,
+      oneliner:'Late-career workers face forced displacement, digital skill gaps, and growing vulnerability to AI-driven fraud.',
+      cares:'Protection from forced displacement, digital literacy support, phased retirement options, reemployment pathways, and misinformation and fraud protection.',
+      grievance:'Pew Research Center\'s 2024 national study found US workers are more worried than hopeful about AI in the workplace \u2014 a concern amplified for older workers facing digital skill gaps and limited retraining options. This cohort is vulnerable to accelerated retirement due to automation and disproportionate exposure to AI-driven misinformation and fraud.',
+      engage:'Offer AI literacy bootcamps through libraries and senior centers. Promote employer tax incentives for phased retirement. Collaborate with AARP NC for digital upskilling outreach. Tailor messaging to emphasize AI augmentation rather than replacement. Prioritize rural broadband access for seniors who cannot reach urban training centers.' },
+    { name:'NC Dept. of Commerce / NCWorks', stance:'neutral', intensity:50,
+      oneliner:'Commerce supports reemployment in principle but faces structural tensions between WIOA compliance and deep reskilling.',
+      cares:'Administrative feasibility, WIOA federal compliance, measurable performance metrics, and cross-agency coordination.',
+      grievance:'New program requirements consistently add compliance and reporting burden without commensurate staffing or systems upgrades. The WIOA State Steering Council reviews referral and alignment policy biannually using separate case management systems across agencies \u2014 creating friction in the infrastructure meant to connect displaced workers to retraining.',
+      engage:'Fund implementation capacity alongside each new program. Build shared data infrastructure to reduce duplicative reporting between Commerce, NCCCS, and the UNC System. Pilot co-location of NCWorks advisors on community college campuses in high-displacement counties. Establish an annual NC AI Workforce Summit co-convened by Commerce and NCDIT.' },
+  ],
+};
+
+/* ── STATE ─────────────────────────────────────────────── */
+let activeTab    = 'r1';
+let activeFilter = 'all';
+let selected     = null;
+
+/* ── HELPERS ───────────────────────────────────────────── */
+function getNonneg(s) {
+  return s.cares
+    .replace(/\.$/, '')
+    .replace(/ and /gi, ', ')
+    .split(',')
+    .map(x => x.trim())
+    .filter(x => x.length > 4)
+    .slice(0, 3);
+}
+
+function recLabel(id) {
+  const r = recs.find(r => r.id === id);
+  return r ? r.label : id;
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+/* ── TABS ───────────────────────────────────────────────── */
+function renderTabs() {
+  const bar = document.getElementById('tabs-bar');
+  bar.innerHTML = '';
+  [...recs, { id:'overview', label:'Stakeholder overview' }].forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-pill' + (activeTab === r.id ? ' active' : '');
+    btn.textContent = r.label;
+    btn.onclick = () => { activeTab = r.id; selected = null; render(); };
+    bar.appendChild(btn);
+  });
+}
+
+/* ── FILTER ─────────────────────────────────────────────── */
+function renderFilter() {
+  const bar = document.getElementById('filter-bar');
+  bar.style.display = activeTab === 'overview' ? 'none' : 'flex';
+  bar.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.stance === activeFilter);
+    btn.onclick = () => { activeFilter = btn.dataset.stance; selected = null; render(); };
+  });
+}
+
+/* ── CONTEXT BLURB ──────────────────────────────────────── */
+function renderContext() {
+  const el = document.getElementById('context-blurb');
+  if (activeTab === 'overview') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const rec = recs.find(r => r.id === activeTab);
+  el.textContent = rec ? rec.context : '';
+}
+
+/* ── CARDS ──────────────────────────────────────────────── */
+function renderCards() {
+  const list   = document.getElementById('card-list');
+  const panel  = document.getElementById('detail-panel');
+  const ovSec  = document.getElementById('overview-section');
+
+  if (activeTab === 'overview') {
+    list.style.display  = 'none';
+    panel.style.display = 'none';
+    ovSec.style.display = 'block';
+    renderOverview();
+    return;
+  }
+
+  list.style.display  = 'flex';
+  panel.style.display = '';
+  ovSec.style.display = 'none';
+
+  const items = (stakeholders[activeTab] || [])
+    .filter(s => activeFilter === 'all' || s.stance === activeFilter)
+    .sort((a, b) => b.intensity - a.intensity);
+
+  list.innerHTML = '';
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-msg">No stakeholders match this filter.</div>';
+    return;
+  }
+
+  items.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'scard' + (selected?.name === s.name ? ' selected' : '');
+    card.innerHTML = `
+      <div class="card-r1">
+        <span class="sdot sdot-${s.stance}"></span>
+        <span class="sname">${esc(s.name)}</span>
+        <span class="sbadge sbadge-${s.stance}">${s.stance}</span>
+      </div>
+      <div class="card-r2">
+        <span class="int-lbl">Intensity</span>
+        <div class="bar-wrap"><div class="bar-fill bar-${s.stance}" style="width:${s.intensity}%"></div></div>
+        <span class="int-score">${s.intensity}/100</span>
+      </div>
+      <div class="card-r3">${esc(s.oneliner)}</div>`;
+    card.onclick = () => { selected = s; render(); };
+    list.appendChild(card);
+  });
+}
+
+/* ── DETAIL PANEL ───────────────────────────────────────── */
+function renderDetail() {
+  const panel = document.getElementById('detail-panel');
+  const inner = document.getElementById('detail-inner');
+
+  if (!selected || activeTab === 'overview') {
+    panel.classList.remove('open');
+    return;
+  }
+
+  panel.classList.add('open');
+  const s = selected;
+  inner.innerHTML = `
+    <div class="dp-hdr">
+      <div class="dp-title-blk">
+        <div class="dp-name">${esc(s.name)}</div>
+        <div class="dp-meta">
+          <span class="sbadge sbadge-${s.stance}">${s.stance}</span>
+          <span class="dp-score">Intensity&nbsp;${s.intensity}/100</span>
+        </div>
+      </div>
+      <button class="dp-close" id="dp-close-btn">&times;</button>
+    </div>
+    <div class="dp-sec">
+      <div class="dp-sec-lbl">What they care about</div>
+      <div class="dp-sec-body">${esc(s.cares)}</div>
+    </div>
+    <div class="dp-sec">
+      <div class="dp-sec-lbl">Their grievance</div>
+      <div class="dp-sec-body">${esc(s.grievance)}</div>
+    </div>
+    <div class="dp-sec">
+      <div class="dp-sec-lbl">How to engage</div>
+      <div class="dp-sec-body">${esc(s.engage)}</div>
+    </div>`;
+
+  document.getElementById('dp-close-btn').onclick = () => { selected = null; render(); };
+}
+
+/* ── OVERVIEW ───────────────────────────────────────────── */
+function renderOverview() {
+  const el  = document.getElementById('overview-section');
+  const all = [];
+  Object.entries(stakeholders).forEach(([recId, list]) => {
+    list.forEach(s => all.push({ ...s, recId }));
+  });
+  const stanceOrder = { against: 0, neutral: 1, pro: 2 };
+  all.sort((a, b) => {
+    if (stanceOrder[a.stance] !== stanceOrder[b.stance]) return stanceOrder[a.stance] - stanceOrder[b.stance];
+    return b.intensity - a.intensity;
+  });
+
+  el.innerHTML = '<div class="ov-grid">' + all.map(s => {
+    const nn = getNonneg(s);
+    return `
+      <div class="ov-card">
+        <div class="ov-hdr">
+          <span class="sdot sdot-${s.stance}"></span>
+          <span class="ov-name">${esc(s.name)}</span>
+          <span class="sbadge sbadge-${s.stance}">${s.stance}</span>
+        </div>
+        <div class="ov-int-row">
+          <div class="bar-wrap"><div class="bar-fill bar-${s.stance}" style="width:${s.intensity}%"></div></div>
+          <span class="int-score">${s.intensity}/100</span>
+        </div>
+        <div class="ov-chips">
+          <span class="rec-chip">${esc(recLabel(s.recId))}</span>
+        </div>
+        <div class="nn-lbl">Non-negotiables</div>
+        <ul class="nn-list">${nn.map(n => `<li>${esc(n)}</li>`).join('')}</ul>
+      </div>`;
+  }).join('') + '</div>';
+}
+
+/* ── RENDER ALL ─────────────────────────────────────────── */
+function render() {
+  renderTabs();
+  renderFilter();
+  renderContext();
+  renderCards();
+  renderDetail();
+}
+
+render();
+</script>
+</body>
+</html>
