@@ -519,29 +519,36 @@ function renderDetail() {
 
   if (!selected || activeTab === 'overview') {
     panel.classList.remove('open');
-    panel.style.marginTop = '0px';
     return;
   }
 
   panel.classList.add('open');
 
   requestAnimationFrame(() => {
-    const card = document.querySelector('.scard.selected');
+    const cardEls = document.querySelectorAll('.scard');
+    const card = Array.from(cardEls).find(el => el.querySelector('.sname')?.textContent === selected?.name);
     if (!card) return;
-    const cardRect    = card.getBoundingClientRect();
-    const mainAreaRect = panel.parentElement.getBoundingClientRect();
-    const panelHeight  = panel.offsetHeight;
+
+    const cardRect   = card.getBoundingClientRect();
+    const panelRect  = panel.getBoundingClientRect();
+    const panelHeight   = panel.offsetHeight;
     const viewportHeight = window.innerHeight;
 
-    let desiredMarginTop = cardRect.top - mainAreaRect.top;
+    // How far down would the panel need to scroll to align its top with the card's top
+    const desiredOffset    = cardRect.top - panelRect.top;
+    const desiredScrollTop = Math.max(0, panel.scrollTop + desiredOffset);
 
-    const projectedBottom = mainAreaRect.top + desiredMarginTop + panelHeight;
-    if (projectedBottom > viewportHeight) {
-      desiredMarginTop = viewportHeight - mainAreaRect.top - panelHeight;
+    // Check if aligning to card top would cause the panel bottom to exceed the viewport
+    const panelTopIfAligned    = panelRect.top + desiredOffset;
+    const panelBottomIfAligned = panelTopIfAligned + panelHeight;
+
+    if (panelBottomIfAligned > viewportHeight) {
+      // Align panel bottom to viewport bottom instead
+      const bottomAlignedScroll = panel.scrollTop + (viewportHeight - panelRect.bottom);
+      panel.scrollTop = Math.max(0, panel.scrollTop + bottomAlignedScroll);
+    } else {
+      panel.scrollTop = desiredScrollTop;
     }
-
-    desiredMarginTop = Math.max(0, desiredMarginTop);
-    panel.style.marginTop = desiredMarginTop + 'px';
   });
 
   const s = selected;
